@@ -49,5 +49,5 @@ resource "aws_volume_attachment" "ebs_web" {
 
 resource "aws_key_pair" "test-key" {  #### Change public key
   key_name   = "mac-key"
-  public_key = "example key"
+  public_key = file("~/.ssh/id_rsa.pub ")
 }
