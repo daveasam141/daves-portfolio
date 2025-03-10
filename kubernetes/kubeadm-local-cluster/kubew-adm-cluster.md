@@ -79,12 +79,13 @@ sudo systemctl enable --now kubelet
 
 *** Make sure you have consistent cgroup drivers with container runtime and kubelet. To interface with control groups, the kubelet and the container runtime need to use a cgroup driver. It's critical that the kubelet and the container runtime use the same cgroup driver and are configured the same.
 
-
+### Step 7: Initialize control plane 
+sudo kubeadm init ### make sure to store output to configure worker nodes
 
 
 ###### Woker nodes config 
 ## Step 1: On the control plane, open ports:
-sudo firewall-cmd --permanent --add-port={6443,2379,10250,10259,10257}/tcp
+sudo firewall-cmd --permanent --add-port={10250,10256,30000-32767}/tcp
 sudo firewall-cmd --reload
 
 ## Step 2: Disable swap (won't survive reboot)
@@ -98,7 +99,7 @@ sestatus ### Check SElinux status to make sure its in permissive mode
 ## Step 4: Add Kernel Modules and Parameters 
 ###Adding kernel modules and parameters is crucial for Kubernetes to manage network traffic and container communication across nodes. The overlay module facilitates layered filesystems for efficient storage in containers, while br_netfilter allows network filtering between bridged interfaces. These modules ensure proper inter-pod networking and adherence to Kubernetes’ network policies, preventing performance issues and enhancing functionality.
 
-sudo echo -e "overlay\nbr_netfilter" | sudo tee /etc/modules-load.d/containerd.conf && sudo modprobe overlay && sudo modprobe br_netfilter###
+sudo echo -e "overlay\nbr_netfilter" | sudo tee /etc/modules-load.d/containerd.conf && sudo modprobe overlay && sudo modprobe br_netfilter 
 
 ###Kubernetes requires specific kernel parameters for effective network traffic management:
 net.bridge.bridge-nf-call-iptables = 1 enables bridged traffic to pass through iptables, crucial for routing between nodes and pods.
@@ -114,7 +115,7 @@ sudo sysctl --system
 sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 sudo dnf install containerd.io -y
 containerd config default | sudo tee /etc/containerd/config.toml >/dev/null 2>&1
-sudo sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+sudo sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml ### using systemd C group drivers 
 
 ## Restart and enable containerd runtime 
 sudo systemctl restart containerd
@@ -136,3 +137,20 @@ EOF
 # Install kubelet, kubeadm and kubectl 
 sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 sudo systemctl enable --now kubelet
+
+### Step 7:add the worker node to the cluster
+# on the control plane run:
+kubeadm token create --print-join-command
+# The command above will print an output like this:
+kubeadm join <control-plane-ip>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>
+
+
+# Label node 
+kubectl label node worker-node-2 node-role.kubernetes.io/worker=""
+kubectl label node worker-01 node-role.kubernetes.io/worker=""
+### 
+ 
+ 
+ 
+ 
+ 
