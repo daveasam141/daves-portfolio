@@ -1,5 +1,5 @@
 ### Working with IPA server ldap service 
-### Might need to create ticket for admin user to access IPA server
+### Might need to obtain ticket from kerberos  for admin user to access IPA server
 kinit admin
 
 sudo ipactl status 

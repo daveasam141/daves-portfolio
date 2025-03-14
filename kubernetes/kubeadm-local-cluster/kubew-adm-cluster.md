@@ -143,12 +143,22 @@ sudo systemctl enable --now kubelet
 kubeadm token create --print-join-command
 # The command above will print an output like this:
 kubeadm join <control-plane-ip>:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>
-
-
+![alt text](screenshot/Screenshot 2025-03-05 at 11.54.53 PM.png)
+# make sure all nodes have been successfully joined to the cluster (nodes might not be in ready state until the cni network plugin has been installed)
+k get nodes 
+![alt text](screenshots/Screenshot 2025-03-12 at 11.06.51 AM.png)
 # Label node 
 kubectl label node worker-node-2 node-role.kubernetes.io/worker=""
 kubectl label node worker-01 node-role.kubernetes.io/worker=""
-### 
+
+
+#### Step 8 Install a network plugin, this allows pods to communicate with each other(CNI, using calico in this case) 
+# Apply the Calico YAML file to deploy the required components:
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26/manifests/calico.yaml
+# Verify installation
+kubectl get pods -n kube-system | grep calico
+![alt text](screenshots/Screenshot 2025-03-12 at 11.15.35 AM.png)
+
  
  
  
