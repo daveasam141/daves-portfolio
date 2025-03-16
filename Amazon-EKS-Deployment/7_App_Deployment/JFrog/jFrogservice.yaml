@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: artifactory
+  namespace: artifactory
+spec:
+  selector:
+    app: artifactory
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8082
+      targetPort: 8082

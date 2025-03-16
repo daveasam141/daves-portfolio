@@ -1,0 +1,11 @@
+secretGenerator:
+- name: mysql-pass
+  literals:
+  - password=Redhat123
+resources:
+  - namespace.yaml 
+  - postgres-configmap.yaml
+  - psql-pv.yaml
+  - ps-deployment.yaml
+  - ps-service.yaml
+namespace: confluence

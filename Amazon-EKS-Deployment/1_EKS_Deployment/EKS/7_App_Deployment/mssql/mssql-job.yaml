@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mssql-secret
+  namespace: mssql 
+type: Opaque
+data:
+  MSSQL_SA_PASSWORD: U3FsMjAxOWlzZmFzdA==
+
+### To encrypt secret username and password for secret 
+https://www.base64encode.org/

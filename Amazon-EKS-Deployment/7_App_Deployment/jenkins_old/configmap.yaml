@@ -1,0 +1,52 @@
+# configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-config
+  namespace: jenkins
+data:
+  jenkins.yaml: |
+    jenkins:
+      systemMessage: "Jenkins configured automatically by Jenkins Configuration as Code plugin\n\n"
+      securityRealm:
+        local:
+          allowsSignup: false
+          users:
+            - id: "admin"
+              password: "admin"
+      authorizationStrategy:
+        loggedInUsersCanDoAnything:
+          allowAnonymousRead: true
+      tools:
+        jdk:
+          installations:
+            - name: "Default"
+              home: "/usr/lib/jvm/java-11-openjdk"
+      installState: RUNNING
+      numExecutors: 2
+    unclassified:
+      location:
+        url: http://localhost:8080/
+    tool:
+      git:
+        installations:
+          - home: "/usr/bin/git"
+    security:
+      queueItemAuthenticator:
+        authenticators:
+          - global:
+              strategy: SYSTEM
+    jenkins:
+      installState: RUNNING
+    casc:
+      configs:
+        - /var/jenkins_home/casc_configs/jenkins.yaml
+    plugin:
+      - kubernetes:1.29.2
+      - workflow-aggregator:2.6
+      - git:4.7.1
+      - configuration-as-code:1.51
+      - job-dsl:1.77
+      - pipeline-utility-steps:2.7.1
+      - blueocean:1.24.7
+

@@ -1,0 +1,15 @@
+apiVersion: 0.3.0
+environments:
+  default:
+    destination:
+      namespace: default
+      server: https://2195FB43FC4133E84942AEB1FA300351.yl4.us-east-2.eks.amazonaws.com
+    k8sVersion: v1.8.0
+    path: default
+kind: ksonnet.io/app
+name: kube-benchapp
+registries:
+  incubator:
+    protocol: github
+    uri: github.com/ksonnet/parts/tree/master/incubator
+version: 0.0.1
