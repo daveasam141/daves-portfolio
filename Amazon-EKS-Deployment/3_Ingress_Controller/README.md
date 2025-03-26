@@ -19,4 +19,14 @@ helm upgrade --install ingress-nginx ingress-nginx \
 kubectl get po -n ingress-nginx
 kubectl get svc -n ingress-nginx
 kubectl get ing -n ingress-nginx
+
+# Upgrading ingress controller
+#Make sure to have ingress-nginx repo 
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+![alt text](<screenshots/Screenshot 2025-03-26 at 4.53.17 PM.png>)
+
+# run helm upgrade command to upgrade repo 
+helm upgrade --reuse-values ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx
+![alt text](<screenshots/Screenshot 2025-03-26 at 4.58.07 PM.png>)
+
 ```

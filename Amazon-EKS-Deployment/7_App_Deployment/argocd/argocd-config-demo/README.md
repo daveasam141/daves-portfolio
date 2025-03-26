@@ -4,52 +4,82 @@ brew install argocd
 
 ### Install Argo CD to the cluster
 kubectl create namespace argocd
-kubectl apply -n argocd2 -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+![alt text](<screenshots/Screenshot 2025-03-15 at 7.11.26 PM.png>)
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+![alt text](<Screenshot 2025-03-15 at 7.13.25 PM-1.png>)
 
 ### The password is auto-generated, we can get it with:
-kubectl -n argocd2 get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 passwd:###
 
-### Accessing the Argo CD Web UI
+### Accessing the Argo CD Web UI (for testing purposes)
 kubectl port-forward svc/argocd-server -n argocd2 8080:443
 
 kubectl get po -n argocd
 kubectl get svc -n argocd
 kubectl get ing -n argocd
 
-#### or use this method after installing argocd to retrieve paswd and log in 
-kubectl patch svc argocd-server -n argocd2 -p '{"spec": {"type": "LoadBalancer"}}' > /dev/null 2>&1 
-export argo_url=$(kubectl get svc -n argocd2 | grep argocd-server | awk '{print $4}' | grep -v none)
+#### or use this method after installing argocd to expose service using LoadBalancer and to retrieve passwd and log in 
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}' > /dev/null 2>&1 
+export argo_url=$(kubectl get svc -n argocd | grep argocd-server | awk '{print $4}' | grep -v none)
 echo "argo_url: http://$argo_url/"
 echo username: "admin"
 echo password: $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+![alt text](<screenshot/Screenshot 2025-03-15 at 7.38.16 PM.png>)
 
 ### To log into argocd thriugh command line to connect it with the ui so you can deploy from git with argo from CL instead of ui
-argocd login 127.0.0.1:8080 --username admin --password Mftng36BOwi1Axju--insecure
+argocd login 127.0.0.1:8080 --username admin --password (password)--insecure
+![alt text](<screenshot/Screenshot 2025-03-15 at 7.47.58 PM.png>)
 
-###  To sync an argocd deployment using cli 
-argocd --port-forward --port-forward-namespace=argocd app sync (appname)
 
-### To log into argocd thriugh command line to connect it with the ui so you can deploy from git with argo from CL instead of ui
+### To log into argocd thriugh command line to connect it with the ui so you can deploy from git with argo from CLI instead of ui
 argocd login 127.0.0.1:8080 --username admin --password (insert-here) --insecure
 
-### How to  deploy an app with argocd
-argocd --port-forward --port-forward-namespace=argocd2 app create homesite --repo https://github.com/daveasam141/argocd-config-demo-2-.git --path homesite --dest-server https://kubernetes.default.svc --dest-namespace argocd2
+### How to  deploy an app with argocd(if using port-forward)
+argocd --port-forward --port-forward-namespace=argocd2 app create homesite --repo https://github.com/daveasam141/argocd-config-demo-2-.git --path homesite --dest-server https://kubernetes.default.svc --dest-namespace argocd
+### If using LoadBalancer (no need to port-forward)
+argocd app create homesite --repo https://github.com/daveasam141/argocd-config-demo-2-.git --path homesite --dest-server https://kubernetes.default.svc --dest-namespace argocd
+![alt text](<screenshot/Screenshot 2025-03-15 at 7.55.45 PM.png>)
+![alt text](<Screenshot 2025-03-15 at 7.57.39 PM.png>)
 
-### If your're getting a connection refused error with argocd include port forward in every argocd command 
-argocd --port-forward --port-forward-namespace=argocd2 login --username=admin --password=(insert)
+###  To sync an argocd deployment using cli 
+argocd app sync argocd/homesite
+![alt text](<screenshot/Screenshot 2025-03-15 at 7.59.36 PM.png>)
+
+### Intentionally pushing a change to github so that aregocd will go out of sync(auto sync not on yet)
+![alt text](<screenshots/Screenshot 2025-03-15 at 8.25.37 PM.png>)
+![alt text](<screenshots/Screenshot 2025-03-15 at 8.38.03 PM.png>)
+
+
+### To enable auto-sync on argocd 
+argocd  app set argocd/homesite --sync-policy automated
+![alt text](<screenshots/Screenshot 2025-03-15 at 8.43.55 PM.png>)
+argocd  app set <APPNAME> --sync-policy automated
+OR adding the following lines to the argocd application manifest:
+spec:
+  syncPolicy:
+    automated: {}
+
+### To enable auto-sync with auto-pruning (pruning automatically deletes the older resources not longer defined in git after auto-sync has happened )
+argocd  app set argocd/homesite  --auto-prune
+OR by setting the prune option to true in the automated sync policy using the following lines:
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+
 
 ### Apps deployed with argocd can be deleted with cascade and without it. (cascade removes all the resources related to the application as well)
 To perform a non cascade remove: argocd app delete APPNAME --cascade=false
 
 ### To delete using cascade 
 argocd app delete APPNAME --cascade OR argocd app delete APPNAME
-argocd --port-forward --port-forward-namespace=argocd2 app delete homesite 
+argocd  app delete homesite 
 
 ### To get argocd app 
-argocd --port-forward --port-forward-namespace=argocd app get homesite 
+argocd  app get homesite 
 
-### How to deploy an app with argocd
+### How to deploy an app with argocd with a different branch *(specify path )
 argocd --port-forward --port-forward-namespace=argocd2 app create homesite --repo https://github.com/daveasam141/argocd-config-demo.git --path homesite --dest-server https://kubernetes.default.svc --dest-namespace argocd2
 argocd  app create homesite --repo https://github.com/daveasam141/argocd-config-demo.git --path argocdbranch/homesite --dest-server https://kubernetes.default.svc --dest-namespace argocd
 
@@ -69,14 +99,8 @@ argocd --port-forward --port-forward-namespace=argocd app history <app-name>
 argocd --port-forward --port-forward-namespace=argocd app rollback homesite 0
 argocd --port-forward --port-forward-namespace=argocd app rollback homesite - revision=0
 
-### To enable auto-sync on argocd 
-argocd --port-forward --port-forward-namespace=argocd app set <APPNAME> --sync-policy automatedn 
-OR adding the following lines to the argocd application manifest:
-spec:
-  syncPolicy:
-    automated: {}
 
-### To enable auto-sync with auto-pruning (pruning automatically deletes the older resorces not longer defined in git after auto-sync has happened )
+### To enable auto-sync with auto-pruning (pruning automatically deletes the older resources not longer defined in git after auto-sync has happened )
 argocd --port-forward --port-forward-namespace=argocd  app set <APPNAME> --auto-prune
 OR by setting the prune option to true in the automated sync policy using the following lines:
 spec:

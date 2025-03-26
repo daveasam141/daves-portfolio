@@ -1,53 +1,41 @@
 ```sh 
-### Create a configuration file to configure Vault installation.
-server:
-  standalone:
-    enabled: true
-    config: |
-      ui = true
-      listener "tcp" {
-        tls_disable = 1
-        address = "[::]:8200"
-        cluster_address = "[::]:8201"
-      }
-      storage "file" {
-        path = "/vault/data"
-      }
-  service:
-    enabled: true
-ui:
-  enabled: true
-  serviceType: Loadbalancer 
+##### Deploying Vault using Helm 
+### Install vaultcli 
+brew tap hashicorp/tap
+brew install hashicorp/tap/vault
 
-### Create namespace for deployment
-kubectl create ns vault
-
-### To access the Vault Helm chart, add the Hashicorp Helm repository.
+#Add the vault helm repository:
 helm repo add hashicorp https://helm.releases.hashicorp.com
+helm repo update
 
-### Install the Vault helm chart.
-helm install vault hashicorp/vault --namespace vault --create-namespace -f values.yaml 
-helm install vault hashicorp/vault
 
-### To get clusterrole 
-k get clusteroles
+### Install vault in development mode for testing 
+helm install vault hashicorp/vault --set "server.dev.enabled=true"
+![alt text](<screenshots/Screenshot 2025-03-17 at 9.55.28 PM.png>)
 
-### To delete cluster role 
-k delete clusterrole (nameofclusterrole)
+### Access vault via port-forward(for testing purposes)
+kubectl port-forward svc/vault 8200:8200
+kubectl exec -it vault-0  -n default -- cat /var/run/secrets/kubernetes.io/serviceaccount/token
 
-### To get clsuter role binding 
-k get clusterrolebinding 
 
-### To delete clusterrolebinding 
-k delete clusterrolebinding(nameofclusterrolebinding)
+### Logging into vault 
+export VAULT_ADDR=http://127.0.0.1:8200
+vault login root
 
-### To clean up if helm unistall leaves residue behind 
-kubectl delete mutatingwebhookconfiguration vault-agent-injector-cfg
-kubectl delete clusterrolebinding vault-server-binding
-kubectl delete clusterrolebinding vault-agent-injector-binding
-kubectl delete clusterrole vault-agent-injector-clusterrole
 
-### key 
+
+vault write auth/kubernetes/role/vault-role \
+   bound_service_account_names=vault \
+   bound_service_account_namespaces=vault \
+   policies=read-policy \
+   ttl=1h
+
+
+
+
+
+
+
 
 
 
@@ -56,3 +44,4 @@ kubectl delete clusterrole vault-agent-injector-clusterrole
 
 
 ```
+kubectl get secret sh.helm.release.v1.vault.v1 -n default -o=jsonpath='{.data.release}' | base64 --decode
